@@ -1,0 +1,69 @@
+---
+title: "repdata project2"
+author: "morgan"
+date: "2/15/2020"
+output:
+  word_document: default
+  html_document: default
+---
+##Synopsis Storms and other severe weather events can cause both public health and economic problems for communities and municipalities. Many severe events can result in fatalities, injuries, and property damage, and preventing such outcomes to the extent possible is a key concern.The basic goal of this assignment is to explore the NOAA Storm Database and answer some basic questions about severe weather events. 
+##1.Data loading
+```{r cache=TRUE,echo=FALSE,eval=FALSE}
+setwd("~/datascience/stormdata")
+download.file("https://d396qusza40orc.cloudfront.net/repdata%2Fdata%2FStormData.csv.bz2", "StormData.csv.bz2")
+data <- read.csv("repdata_data_StormData.csv.bz2")
+```
+##2.Data processing
+```{r}
+library(dplyr)
+data <- read.csv("repdata_data_StormData.csv.bz2")
+data1 <- subset(data, select = c("EVTYPE","FATALITIES","INJURIES","PROPDMG","PROPDMGEXP","CROPDMG","CROPDMGEXP"))##Subset columns relevant to the analysis
+##we define a new variable "harm", equals to total counts of fatalities and injuries
+data1$harm <- data1$FATALITIES+data1$FATALITIES
+```
+##3.Answer the question
+##Across the United States, which types of events (as indicated in the \color{red}{\verb|EVTYPE|}EVTYPE variable) are most harmful with respect to population health?
+```{r}
+harm_by_evtype <- aggregate(data1$harm ~ data1$EVTYPE, data1,sum)
+harm_by_evtype <- harm_by_evtype[order(harm_by_evtype[,2], decreasing = TRUE),]
+##The answer is  tornado
+```
+##Across the United States, which types of events have the greatest economic consequences?
+```{r}
+##we define a new variable "eco", equals to total counts of crop damage and property damage.
+data1$eco <- data1$PROPDMG+data1$CROPDMG
+eco_by_evtype <- aggregate(data1$eco ~ data1$EVTYPE, data1,sum)
+eco_by_evtype <- eco_by_evtype[order(eco_by_evtype[,2], decreasing = TRUE),]
+##The answer is tornado
+```
+##4.Results
+##The most harmful weather events to human health.
+```{r}
+library(ggplot2)
+res <- harm_by_evtype[1:10,]
+name <- res[1:10,1]
+val <- res[1:10,2]
+res$name <- factor(res$`data1$EVTYPE`, levels = res$`data1$EVTYPE`[order(res$`data1$harm`)])
+
+pic<-ggplot(res, aes(x = name, y = val)) +
+  geom_bar(stat="identity") + 
+  geom_text(aes(label = val), hjust=0, color="red", size=2) + 
+  coord_flip()+
+  labs(title = "Most harmful events to human health") +
+  labs(y = "Fatality and injury counts", x = "Event type")
+pic
+```
+##The most harmful weather events to economy.
+```{r}
+res2 <- eco_by_evtype[1:10,]
+name <- res2[1:10,1]
+val <- res2[1:10,2]
+res2$name <- factor(res2$`data1$EVTYPE`, levels = res2$`data1$EVTYPE`[order(res2$`data1$eco`)])
+pic2<-ggplot(res2, aes(x = name, y = val)) +
+  geom_bar(stat="identity") + 
+  geom_text(aes(label = val), hjust=0, color="red", size=2)+ 
+  coord_flip()+
+  labs(title = "Most harmful events to economy") +
+  labs(y = "Crop and property damage", x = "Event type")
+pic2
+```
